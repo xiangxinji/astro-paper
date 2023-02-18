@@ -215,7 +215,109 @@ void main() {
 
 ## 有状态的 Widget
 
-在上方使用的实例全部都是静态 Widget , 也就是没有状态可以操控 （StatelessWidget） ， 在前端中最重要的莫过于视图和数据层的交互， 在 Flutter 中 当视图和数据层交互并且让视图更新， 我们需要使用  （StatefulWidget）
+在上方使用的实例全部都是静态 Widget , 也就是没有状态可以操控 （StatelessWidget） ， 在前端中最重要的莫过于视图和数据层的交互， 在 Flutter 中 当视图和数据层交互并且让视图更新， 我们需要使用  （StatefulWidget） 它会生成 State 对象，用于保存状态
+
+
+当一个 class 去继承这个 StatefulWidget 时， 需要覆盖他的createState 方法， 也就以为这， 如果是一个 StatefulWidget 下的控件 ， 一定需要 createState 来创建出你当前这个 Widget 的状态
+
+```dart
+class Counter extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    // TODO: implement createState
+    throw UnimplementedError();
+  }
+}
+```
+
+之后我们编写一个状态类， 这个状态类专门只会 Counter 这个组件服务。 所以我们取名为 _CounterState , 由于他是一个状态类， 我们需要去继承 State 类来标记这个类的功能为 “状态”
+
+```dart 
+class _CounterState extends State<Counter> {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    throw UnimplementedError();
+  }
+}
+```
+此时的 _CounterState 就变成了一个状态类， 这个状态类会在调用 setState 之后重新触发 build 方法并且执行 Widget 的构建， 完成视图更新 。 
+
+填充好对应的逻辑 ， 代码如下（由 StatefulWidget 的 createState 来创建一个状态类， 在状态类更新之后会重新触发 build 方法并重新构建 widget）
+
+
+代码如下： 
+```dart
+
+class Counter extends StatefulWidget {
+  const Counter({super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _CounterState();
+  }
+}
+
+class _CounterState extends State<Counter> {
+  int _count = 0;
+
+  void increment() {
+    setState(() {
+      _count++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      ElevatedButton(
+        onPressed: () {
+          increment();
+        },
+        child: const Text('Increment'),
+      ),
+      Text(' count $_count')
+    ]);
+  }
+}
+```
+
+![](/assets/images/flutter/4.png)
+
+
+>StatefulWidget 和 State 是独立的对象。在 Flutter 中，这两种类型的对象具有不同的生命周期。 Widget 是临时对象，用于构造应用当前状态的展示。而 State 对象在调用 build() 之间是持久的，以此来存储信息。 
+
+StatefulWidget 用来标记当前 Widget 需要持久化信息（createState 创建出 State 对象） ，在 State 对象中可以专门保存数据并且复写 build 来达到渲染 Widget 的目的。 
+
+在 Web 前端中， 我们也会分为静态组件和状态组件。 如果是状态组件，转换成 Flutter 中的 StatefulWidget ， 然后继承 State 其实就是完成了对应的状态，然后重新渲染了视图部分 ， 并且在前端中有一种概念叫状态提升， 如果当前状态需要被子 Widget 共享， name这个状态大部分是需要提升到对应的父层级。 
+
+
+## 响应 widget 的生命周期事件
+
+> 在 StatefulWidget 上调用 createState() 之后，框架将新的状态对象插入到树中，然后在状态对象上调用 initState()。 State 的子类可以重写 initState 来完成只需要发生一次的工作。例如，重写 initState 来配置动画或订阅平台服务。实现 initState 需要调用父类的 super.initState 方法来开始。
+
+当不再需要状态对象时，框架会调用状态对象上的 dispose() 方法。可以重写dispose 方法来清理状态。例如，重写 dispose 以取消计时器或取消订阅平台服务。实现 dispose 时通常通过调用 super.dispose 来结束。
+
+1. initState 初始化状态执行的生命周期
+
+2. dispose 销毁状态时执行的生命周期
+
+```dart
+class _CounterState extends State<Counter> {
+  @override
+  void initState() {
+    // 一定确保调用了父类对象的 initState 才能继续， dispose 也一样
+    super.initState();
+  }
+}
+```
+
+
+## Keys 
+
+使用 key 可以控制框架在 widget 重建时与哪些其他 widget 进行匹配。默认情况下，框架根据它们的 runtimeType 以及它们的显示顺序来匹配。使用 key 时，框架要求两个 widget 具有相同的 key 和 runtimeType。
+
+在前端的 Vue / React 的概念中一致 ， 在特殊情况的时候需要用 key 来标记当前的 Widget 发生了变动， 如在循环组件时。 
 
 
 
